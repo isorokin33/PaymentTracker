@@ -12,10 +12,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PaymentTracker extends TimerTask {
-    private static final Map<String, BigDecimal> payment = new HashMap<>();
-    private static final Map<String, BigDecimal> rate = new HashMap<>();
+    private final Map<String, BigDecimal> payment = new HashMap<>();
+    private final Map<String, BigDecimal> rate = new HashMap<>();
 
-    private static void createPayment(String currency, BigDecimal qty){
+    private void createPayment(String currency, BigDecimal qty){
         if (payment.containsKey(currency)) {
             payment.put(currency, payment.get(currency).add(qty));
         } else {
@@ -23,7 +23,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
-    private static void createRate(String currency, BigDecimal qty){
+    private void createRate(String currency, BigDecimal qty){
         if (rate.containsKey(currency)) {
             System.out.println("Duplication currency: " + currency);
         } else {
@@ -31,7 +31,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
-    private static void createDataFromString(String input, boolean isPayment){
+    private void createDataFromString(String input, boolean isPayment){
         Matcher matcher = Pattern.compile("([a-zA-Z]{3}) ((\\-)?([0-9][0-9]*\\.?[0-9]+))").matcher(input);
         if(matcher.find()){
             String currency = matcher.group(1);
@@ -56,7 +56,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
-    private static void readFile(String filePath, boolean isPayment){
+    public void readFile(String filePath, boolean isPayment){
         File file = new File(filePath);
         if (file.isFile()) {
             try {
@@ -74,22 +74,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
-    @Override
-    public void run() {
-        printAllPayments();
-    }
-
-    public static void main(String[] args) {
-        TimerTask timerTask = new PaymentTracker();
-        Timer timer = new Timer(true);
-
-        if (args.length > 0)
-            readFile(args[0],true);
-        if(args.length > 1)
-            readFile(args[1],false);
-
-        timer.scheduleAtFixedRate(timerTask, 0, 60000);
-
+    private void readDataFromConsole(){
         BufferedReader getPayment = new BufferedReader(new InputStreamReader(System.in));
         try {
             //читаем первую строку с консоли и записываем в обект str
@@ -102,6 +87,26 @@ public class PaymentTracker extends TimerTask {
         } catch (IOException ex) {
             System.out.println("Reading error");
         }
+    }
+
+    @Override
+    public void run() {
+        printAllPayments();
+    }
+
+    public static void main(String[] args) {
+        PaymentTracker timerTask = new PaymentTracker();
+        Timer timer = new Timer(true);
+
+        if (args.length > 0)
+            timerTask.readFile(args[0],true);
+        if(args.length > 1)
+           timerTask.readFile(args[1],false);
+
+        timer.scheduleAtFixedRate(timerTask, 0, 60000);
+
+        timerTask.readDataFromConsole();
+
         timer.cancel();
         System.out.println("The End!");
     }
