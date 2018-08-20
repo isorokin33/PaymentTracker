@@ -15,28 +15,25 @@ public class PaymentTracker extends TimerTask {
     private final Map<String, BigDecimal> payment = new HashMap<>();
     private final Map<String, BigDecimal> rate = new HashMap<>();
 
-    private void setPayment(String[] data){
-        BigDecimal qty = new BigDecimal(data[1]);
-        if (payment.containsKey(data[0])) {
-            payment.put(data[0], payment.get(data[0]).add(qty));
+    private void setPayment(Map.Entry<String,BigDecimal> entry){
+        if (payment.containsKey(entry.getKey())) {
+            payment.put(entry.getKey(), payment.get(entry.getKey()).add(entry.getValue()));
         } else {
-            payment.put(data[0], qty);
+            payment.put(entry.getKey(), entry.getValue());
         }
     }
 
-    private void setRate(String[] data){
-        BigDecimal qty = new BigDecimal(data[1]);
-        rate.put(data[0], qty);
+    private void setRate(Map.Entry<String,BigDecimal> entry){
+        rate.put(entry.getKey(), entry.getValue());
     }
 
-    private String[] createDataFromString(String input){
-        String[] data = new String[2];
+    private Map.Entry<String,BigDecimal> createDataFromString(String input){
+        Map.Entry<String,BigDecimal> entry = null;
         Matcher matcher = Pattern.compile("([a-zA-Z]{3}) ((\\-)?([0-9][0-9]*\\.?[0-9]+))").matcher(input);
         if(matcher.find()){
-            data[0] = matcher.group(1);
-            data[1] = matcher.group(2);
+            entry = new AbstractMap.SimpleEntry<String, BigDecimal>(matcher.group(1), new BigDecimal(matcher.group(2)));
         }
-        return data;
+        return entry;
     }
 
     private void printAllPayments(){
@@ -64,16 +61,16 @@ public class PaymentTracker extends TimerTask {
     }
 
     private void readDataFromConsole(){
-        String[] data;
+        Map.Entry<String,BigDecimal> entry = null;
         BufferedReader getPayment = new BufferedReader(new InputStreamReader(System.in));
         try {
             String str = getPayment.readLine();
             while (!str.equals("quit")) {
-                data = createDataFromString(str);
-                if(data[0] == null && data[1] == null)
+                entry = createDataFromString(str);
+                if(entry == null)
                     System.out.println("Invalid format. Please enter payment or quit.");
                 else
-                    setPayment(data);
+                    setPayment(entry);
                 str = getPayment.readLine();
             }
         } catch (IOException ex) {
@@ -90,29 +87,27 @@ public class PaymentTracker extends TimerTask {
         PaymentTracker timerTask = new PaymentTracker();
         Timer timer = new Timer(true);
         List<String> lStr = null;
-        String[] dStr ;
+        Map.Entry<String,BigDecimal> entry = null;
 
-        //Rates
-        lStr = timerTask.readFile("e:\\MyProjectJava\\PaymentTracker\\rate.txt");
-        if(lStr != null) {
-            for (String line : lStr) {
-                dStr = timerTask.createDataFromString(line);
-                if (dStr[0] != null && dStr[1] != null) {
-                    timerTask.setRate(dStr);
+        for(int i = 0; i < args.length; i++){
+            lStr = timerTask.readFile(args[i]);
+            if (lStr == null) {
+                if(args[i].contains("payments")) {
+                    System.out.println("File Payments in the specified path (" + args[i] + ") does not exist!");
                 }
-            }
-        }
-
-        //Payments
-        if (args.length > 0) {
-            lStr = timerTask.readFile(args[0]);
-            if(lStr == null) {
-                System.out.println("File in the specified path (" + args[0] + ") does not exist!");
+                if(args[i].contains("rates")) {
+                    System.out.println("File Rates in the specified path (" + args[i] + ") does not exist!");
+                }
             } else {
                 for (String line : lStr) {
-                    dStr = timerTask.createDataFromString(line);
-                    if (dStr[0] != null && dStr[1] != null) {
-                        timerTask.setPayment(dStr);
+                    entry = timerTask.createDataFromString(line);
+                    if (entry != null) {
+                        if (args[i].contains("payments")) {
+                            timerTask.setPayment(entry);
+                        }
+                        if (args[i].contains("rates")) {
+                            timerTask.setRate(entry);
+                        }
                     }
                 }
             }
