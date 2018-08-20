@@ -9,7 +9,7 @@
         <module name="PaymentTracker" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
+    <bytecodeTargetLevel target="8">
       <module name="PaymentTracker" target="8" />
     </bytecodeTargetLevel>
   </component>
