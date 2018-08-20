@@ -15,34 +15,28 @@ public class PaymentTracker extends TimerTask {
     private final Map<String, BigDecimal> payment = new HashMap<>();
     private final Map<String, BigDecimal> rate = new HashMap<>();
 
-    private void createPayment(String currency, BigDecimal qty){
-        if (payment.containsKey(currency)) {
-            payment.put(currency, payment.get(currency).add(qty));
+    private void setPayment(String[] data){
+        BigDecimal qty = new BigDecimal(data[1]);
+        if (payment.containsKey(data[0])) {
+            payment.put(data[0], payment.get(data[0]).add(qty));
         } else {
-            payment.put(currency, qty);
+            payment.put(data[0], qty);
         }
     }
 
-    private void createRate(String currency, BigDecimal qty){
-        if (rate.containsKey(currency)) {
-            System.out.println("Duplication currency: " + currency);
-        } else {
-            rate.put(currency, qty);
-        }
+    private void setRate(String[] data){
+        BigDecimal qty = new BigDecimal(data[1]);
+        rate.put(data[0], qty);
     }
 
-    private void createDataFromString(String input, boolean isPayment){
+    private String[] createDataFromString(String input){
+        String[] data = new String[2];
         Matcher matcher = Pattern.compile("([a-zA-Z]{3}) ((\\-)?([0-9][0-9]*\\.?[0-9]+))").matcher(input);
         if(matcher.find()){
-            String currency = matcher.group(1);
-            BigDecimal qty = new BigDecimal (matcher.group(2));
-            if(isPayment)
-                createPayment(currency,qty);
-            else
-                createRate(currency,qty);
-        } else {
-            System.out.println("Invalid format. Please enter transaction or quit.");
+            data[0] = matcher.group(1);
+            data[1] = matcher.group(2);
         }
+        return data;
     }
 
     private void printAllPayments(){
@@ -56,33 +50,31 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
-    public void readFile(String filePath, boolean isPayment){
+    private List<String> readFile(String filePath){
+        List<String> lines = null;
         File file = new File(filePath);
         if (file.isFile()) {
             try {
-                //читаем по строчно данные из файла и записываем его в List
-                List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-                for(String line: lines){
-                    createDataFromString(line, isPayment);
-                }
+                lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else {
-            //если файла не существует выдаем ошибку
-            System.out.println("File in the specified path (" + filePath + ") does not exist!");
         }
+        return lines;
     }
 
     private void readDataFromConsole(){
+        String[] data;
         BufferedReader getPayment = new BufferedReader(new InputStreamReader(System.in));
         try {
-            //читаем первую строку с консоли и записываем в обект str
             String str = getPayment.readLine();
-            //чтение с консоли происходит до тех пор пока пользователь не введет "quit"
             while (!str.equals("quit")) {
-                createDataFromString(str, true); //Записываем данные в payment
-                str = getPayment.readLine(); //читаем следующую строку
+                data = createDataFromString(str);
+                if(data[0] == null && data[1] == null)
+                    System.out.println("Invalid format. Please enter payment or quit.");
+                else
+                    setPayment(data);
+                str = getPayment.readLine();
             }
         } catch (IOException ex) {
             System.out.println("Reading error");
@@ -97,11 +89,34 @@ public class PaymentTracker extends TimerTask {
     public static void main(String[] args) {
         PaymentTracker timerTask = new PaymentTracker();
         Timer timer = new Timer(true);
+        List<String> lStr = null;
+        String[] dStr ;
 
-        if (args.length > 0)
-            timerTask.readFile(args[0],true);
-        if(args.length > 1)
-           timerTask.readFile(args[1],false);
+        //Rates
+        lStr = timerTask.readFile("e:\\MyProjectJava\\PaymentTracker\\rate.txt");
+        if(lStr != null) {
+            for (String line : lStr) {
+                dStr = timerTask.createDataFromString(line);
+                if (dStr[0] != null && dStr[1] != null) {
+                    timerTask.setRate(dStr);
+                }
+            }
+        }
+
+        //Payments
+        if (args.length > 0) {
+            lStr = timerTask.readFile(args[0]);
+            if(lStr == null) {
+                System.out.println("File in the specified path (" + args[0] + ") does not exist!");
+            } else {
+                for (String line : lStr) {
+                    dStr = timerTask.createDataFromString(line);
+                    if (dStr[0] != null && dStr[1] != null) {
+                        timerTask.setPayment(dStr);
+                    }
+                }
+            }
+        }
 
         timer.scheduleAtFixedRate(timerTask, 0, 60000);
 
