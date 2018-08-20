@@ -12,9 +12,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PaymentTracker extends TimerTask {
+    //Коллекция для хранения платежей
     private final Map<String, BigDecimal> payment = new HashMap<>();
+    //Коллекция для хранения курсов варют
     private final Map<String, BigDecimal> rate = new HashMap<>();
 
+    //Функция сохранения данных в коллекцию платежей
     private void setPayment(Map.Entry<String,BigDecimal> entry){
         if (payment.containsKey(entry.getKey())) {
             payment.put(entry.getKey(), payment.get(entry.getKey()).add(entry.getValue()));
@@ -23,10 +26,12 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
+    //Функция сохранения данных в колекцию курсов валют
     private void setRate(Map.Entry<String,BigDecimal> entry){
         rate.put(entry.getKey(), entry.getValue());
     }
 
+    //Функция преобразует данные из строки к типу Map.Entry<String,BigDecimal> для сохранения их в коллекции
     private Map.Entry<String,BigDecimal> createDataFromString(String input){
         Map.Entry<String,BigDecimal> entry = null;
         Matcher matcher = Pattern.compile("([a-zA-Z]{3}) ((\\-)?([0-9][0-9]*\\.?[0-9]+))").matcher(input);
@@ -36,6 +41,7 @@ public class PaymentTracker extends TimerTask {
         return entry;
     }
 
+    //Функция вывода платежей на экран
     private void printAllPayments(){
         for(Map.Entry<String,BigDecimal> entry  : payment.entrySet()) {
             if (entry.getValue().compareTo(BigDecimal.ZERO) != 0) {
@@ -47,6 +53,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
+    //Функция чтения данных из файла и преобразование их в List<String>
     private List<String> readFile(String filePath){
         List<String> lines = null;
         File file = new File(filePath);
@@ -60,6 +67,7 @@ public class PaymentTracker extends TimerTask {
         return lines;
     }
 
+    //Функция чтения данных с консоли
     private void readDataFromConsole(){
         Map.Entry<String,BigDecimal> entry = null;
         BufferedReader getPayment = new BufferedReader(new InputStreamReader(System.in));
@@ -78,6 +86,7 @@ public class PaymentTracker extends TimerTask {
         }
     }
 
+    //Прцесс вывода данных на экран с определнной периодичностью
     @Override
     public void run() {
         printAllPayments();
@@ -89,26 +98,29 @@ public class PaymentTracker extends TimerTask {
         List<String> lStr = null;
         Map.Entry<String,BigDecimal> entry = null;
 
-        for(int i = 0; i < args.length; i++){
-            lStr = timerTask.readFile(args[i]);
-            if (lStr == null) {
-                if(args[i].contains("payments")) {
-                    System.out.println("File Payments in the specified path (" + args[i] + ") does not exist!");
-                }
-                if(args[i].contains("rates")) {
-                    System.out.println("File Rates in the specified path (" + args[i] + ") does not exist!");
-                }
-            } else {
+        //Парсим файл с платижами, результат записываем в payment
+        if(args.length > 0){
+            lStr = timerTask.readFile(args[0]);
+            if (lStr == null)
+                System.out.println("File Payments in the specified path (" + args[0] + ") does not exist!");
+            else {
                 for (String line : lStr) {
                     entry = timerTask.createDataFromString(line);
-                    if (entry != null) {
-                        if (args[i].contains("payments")) {
-                            timerTask.setPayment(entry);
-                        }
-                        if (args[i].contains("rates")) {
-                            timerTask.setRate(entry);
-                        }
-                    }
+                    if (entry != null)
+                        timerTask.setPayment(entry);
+                }
+            }
+        }
+        //Парсим файл с курсами валют, результат записываем в rate
+        if(args.length > 1){
+            lStr = timerTask.readFile(args[1]);
+            if (lStr == null)
+                System.out.println("File Rates in the specified path (" + args[1] + ") does not exist!");
+            else {
+                for (String line : lStr) {
+                    entry = timerTask.createDataFromString(line);
+                    if (entry != null)
+                        timerTask.setRate(entry);
                 }
             }
         }
