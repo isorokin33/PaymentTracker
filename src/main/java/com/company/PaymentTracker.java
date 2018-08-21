@@ -1,5 +1,7 @@
 package com.company;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,7 @@ public class PaymentTracker extends TimerTask {
     }
 
     //Функция преобразует данные из строки к типу Map.Entry<String,BigDecimal> для сохранения их в коллекции
-    private Map.Entry<String,BigDecimal> createDataFromString(String input){
+    /*private*/ Map.Entry<String,BigDecimal> createDataFromString(String input){
         Map.Entry<String,BigDecimal> entry = null;
         Matcher matcher = Pattern.compile("([a-zA-Z]{3}) ((\\-)?([0-9][0-9]*\\.?[0-9]+))").matcher(input);
         if(matcher.find()){
@@ -54,7 +56,7 @@ public class PaymentTracker extends TimerTask {
     }
 
     //Функция чтения данных из файла и преобразование их в List<String>
-    private List<String> readFile(String filePath){
+    /*private*/ List<String> readFile(String filePath){
         List<String> lines = null;
         File file = new File(filePath);
         if (file.isFile()) {
