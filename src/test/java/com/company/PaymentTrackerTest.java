@@ -35,4 +35,22 @@ class PaymentTrackerTest {
 
         assertEquals(expected,actual);
     }
+
+    @Test
+    void setPayment() {
+        PaymentTracker paymentTracker = new PaymentTracker();
+        Map.Entry<String, BigDecimal> expected = null;
+
+        expected = new AbstractMap.SimpleEntry<String, BigDecimal>("USD", new BigDecimal(100));
+        paymentTracker.setPayment(expected);
+        assertEquals(new BigDecimal(100), paymentTracker.getQty("USD"));
+
+        expected = new AbstractMap.SimpleEntry<String, BigDecimal>("USD", new BigDecimal(-50));
+        paymentTracker.setPayment(expected);
+        assertEquals(new BigDecimal(50), paymentTracker.getQty("USD"));
+
+        expected = new AbstractMap.SimpleEntry<String, BigDecimal>("USD", new BigDecimal(250));
+        paymentTracker.setPayment(expected);
+        assertEquals(new BigDecimal(300), paymentTracker.getQty("USD"));
+    }
 }

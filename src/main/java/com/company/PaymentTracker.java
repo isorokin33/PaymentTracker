@@ -20,12 +20,17 @@ public class PaymentTracker extends TimerTask {
     private final Map<String, BigDecimal> rate = new HashMap<>();
 
     //Функция сохранения данных в коллекцию платежей
-    private void setPayment(Map.Entry<String,BigDecimal> entry){
+    /*private*/ void setPayment(Map.Entry<String,BigDecimal> entry){
         if (payment.containsKey(entry.getKey())) {
             payment.put(entry.getKey(), payment.get(entry.getKey()).add(entry.getValue()));
         } else {
             payment.put(entry.getKey(), entry.getValue());
         }
+    }
+
+    //Функция нужна для тестирования
+    BigDecimal getQty(String currency){
+        return payment.get(currency);
     }
 
     //Функция сохранения данных в колекцию курсов валют
